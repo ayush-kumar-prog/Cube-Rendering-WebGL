@@ -13,8 +13,10 @@
     <script type="module">
         import * as THREE from "https://web.cs.manchester.ac.uk/three/three.js-master/build/three.module.js"; 
         
-        let scene, camera, renderer, shaderCube
+        let scene, camera, renderer, geometry, mesh, material;
         function init() {
+            //creating scene
+
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000 );
             camera.position.z = 5;
@@ -23,9 +25,70 @@
             renderer.setSize( window.innerWidth, window.innerHeight );
             document.body.appendChild( renderer.domElement );
             shaderCube();
+
+            //adding cube
+            geometry = new THREE.BoxGeometry(2, 1, 1);
+            material = new THREE.ShaderMaterial({
+            fragmentShader: fragmentShader(),
+            vertexShader: vertexShader(),
+            })
+            mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh)
+            
+            animate()
+        }
+        
+        function shaderCube() {
+            geometry = new THREE.BoxGeometry(2, 1, 1);
+
+            material = new THREE.ShaderMaterial({
+                // We point to our custom shader functions
+                vertexShader: vertexShader(),
+                fragmentShader: fragmentShader(),
+            });
+
+            mesh = new THREE.Mesh(geometry, material);
+            // scene.add(mesh);
         }
 
-        
+        function vertexShader() {
+            return `
+                vec4 p;
+                varying vec3 vposInterpolated;
+
+                void main() {
+                p = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                gl_Position = p;
+                vposInterpolated = p.xyz;
+                }
+            `;
+        }
+
+        function fragmentShader() {
+            return `
+                varying vec3 vposInterpolated;
+
+                void main() {
+                gl_FragColor = vec4(vposInterpolated, 1.0);
+                }
+            `;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // For rotation
+            mesh.rotation.x += 0.011;
+            mesh.rotation.y += 0.013;
+            
+            // Optional: add more movement if you like
+            // mesh.position.x = Math.sin(Date.now() * 0.001) * 0.5;
+
+            renderer.render(scene, camera);
+        }
+
+
+        init();
     </script>
   
 </body>
